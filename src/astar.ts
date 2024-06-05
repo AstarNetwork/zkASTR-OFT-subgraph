@@ -151,8 +151,9 @@ export function handleReceiveFromChain(event: ReceiveFromChainEvent): void {
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
 
-  updateUserBridgeInfo(event.params._to, event.params._amount, Operation.ADD);
-  
+  if (event.block.number <= BigInt.fromString(SNAPSHOT_BLOCK_NUMBER)) {
+    updateUserBridgeInfo(event.params._to, event.params._amount, Operation.ADD);
+  }
   entity.save()
 }
 
@@ -187,8 +188,9 @@ export function handleSendToChain(event: SendToChainEvent): void {
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
 
-  updateUserBridgeInfo(event.params._from, event.params._amount, Operation.SUBTRACT);
-
+  if (event.block.number <= BigInt.fromString(SNAPSHOT_BLOCK_NUMBER)) {
+    updateUserBridgeInfo(event.params._from, event.params._amount, Operation.SUBTRACT);
+  }
   entity.save()
 }
 
@@ -303,9 +305,10 @@ export function handleTransfer(event: TransferEvent): void {
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
 
-  updateUserAstrHoldings(event.params.to, event.params.value, Operation.ADD);
-  updateUserAstrHoldings(event.params.from, event.params.value, Operation.SUBTRACT);
-
+  if (event.block.number <= BigInt.fromString(SNAPSHOT_BLOCK_NUMBER)) {
+    updateUserAstrHoldings(event.params.to, event.params.value, Operation.ADD);
+    updateUserAstrHoldings(event.params.from, event.params.value, Operation.SUBTRACT);
+  }
   entity.save()
 }
 
@@ -323,6 +326,8 @@ export function handleUnpaused(event: UnpausedEvent): void {
 }
 
 function updateUserAstrHoldings(user: Address, holding: BigInt, operation: Operation): void {
+  if (user.toHexString() == "0x0000000000000000000000000000000000000000") return;
+
   let userHolding = UserHolding.load(user);
   if (userHolding == null) {
     userHolding = new UserHolding(user);
@@ -341,6 +346,8 @@ function updateUserAstrHoldings(user: Address, holding: BigInt, operation: Opera
 }
 
 function updateUserBridgeInfo(user: Address, amount: BigInt, operation: Operation): void {
+  if (user.toHexString() == "0x0000000000000000000000000000000000000000") return;
+
   let userHolding = UserHolding.load(user);
   if (userHolding == null) {
     userHolding = new UserHolding(user);
