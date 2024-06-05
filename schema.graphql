@@ -159,6 +159,12 @@ type Transfer @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+type UserHolding @entity(immutable: false) {
+  id: Bytes!
+  holding: BigInt! # uint256
+  bridgedIn: BigInt! # uint256
+  bridgedOut: BigInt! # uint256
+}
 
 type Unpaused @entity(immutable: true) {
   id: Bytes!
