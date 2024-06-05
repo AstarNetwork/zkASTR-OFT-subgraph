@@ -322,21 +322,22 @@ export function handleUnpaused(event: UnpausedEvent): void {
   entity.save()
 }
 
-
 function updateUserAstrHoldings(user: Address, holding: BigInt, operation: Operation): void {
-  const userHolding = UserHolding.load(user);
+  let userHolding = UserHolding.load(user);
   if (userHolding == null) {
-    const newUserHolding = new UserHolding(user);
-    newUserHolding.holding = holding;
-    newUserHolding.save();
-  } else {
-    if (operation === Operation.ADD) {
-      userHolding.holding = userHolding.holding.plus(holding);
-    } else if (operation === Operation.SUBTRACT) {
-      userHolding.holding = userHolding.holding.minus(holding);
-    }
-    userHolding.save();
+    userHolding = new UserHolding(user);
+    userHolding.holding = BigInt.fromI32(0);
+    userHolding.bridgedIn = BigInt.fromI32(0);
+    userHolding.bridgedOut = BigInt.fromI32(0);
   }
+
+  if (operation === Operation.ADD) {
+    userHolding.holding = userHolding.holding.plus(holding);
+  } else if (operation === Operation.SUBTRACT) {
+    userHolding.holding = userHolding.holding.minus(holding);
+  }
+
+  userHolding.save();
 }
 
 function updateUserBridgeInfo(user: Address, amount: BigInt, operation: Operation): void {
