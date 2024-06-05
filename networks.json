@@ -1,0 +1,8 @@
+{
+  "astar-zkevm-mainnet": {
+    "Astar": {
+      "address": "0xdf41220C7e322bFEF933D85D01821ad277f90172",
+      "startBlock": 1860738
+    }
+  }
+}

@@ -1,0 +1,77 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: Astar
+    network: astar-zkevm-mainnet
+    source:
+      address: "0xdf41220C7e322bFEF933D85D01821ad277f90172"
+      abi: Astar
+      startBlock: 1860738
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Approval
+        - CallOFTReceivedSuccess
+        - MessageFailed
+        - NonContractAddress
+        - OwnershipTransferred
+        - Paused
+        - ReceiveFromChain
+        - RetryMessageSuccess
+        - SendToChain
+        - SetDefaultFeeBp
+        - SetFeeBp
+        - SetFeeOwner
+        - SetMinDstGas
+        - SetPrecrime
+        - SetTrustedRemote
+        - SetTrustedRemoteAddress
+        - Transfer
+        - Unpaused
+      abis:
+        - name: Astar
+          file: ./abis/Astar.json
+      eventHandlers:
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+        - event: CallOFTReceivedSuccess(indexed uint16,bytes,uint64,bytes32)
+          handler: handleCallOFTReceivedSuccess
+        - event: MessageFailed(uint16,bytes,uint64,bytes,bytes)
+          handler: handleMessageFailed
+        - event: NonContractAddress(address)
+          handler: handleNonContractAddress
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: Paused(address)
+          handler: handlePaused
+        - event: ReceiveFromChain(indexed uint16,indexed address,uint256)
+          handler: handleReceiveFromChain
+        - event: RetryMessageSuccess(uint16,bytes,uint64,bytes32)
+          handler: handleRetryMessageSuccess
+        - event: SendToChain(indexed uint16,indexed address,indexed bytes32,uint256)
+          handler: handleSendToChain
+        - event: SetDefaultFeeBp(uint16)
+          handler: handleSetDefaultFeeBp
+        - event: SetFeeBp(uint16,bool,uint16)
+          handler: handleSetFeeBp
+        - event: SetFeeOwner(address)
+          handler: handleSetFeeOwner
+        - event: SetMinDstGas(uint16,uint16,uint256)
+          handler: handleSetMinDstGas
+        - event: SetPrecrime(address)
+          handler: handleSetPrecrime
+        - event: SetTrustedRemote(uint16,bytes)
+          handler: handleSetTrustedRemote
+        - event: SetTrustedRemoteAddress(uint16,bytes)
+          handler: handleSetTrustedRemoteAddress
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Unpaused(address)
+          handler: handleUnpaused
+      file: ./src/astar.ts
