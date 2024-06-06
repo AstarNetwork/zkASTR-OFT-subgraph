@@ -10,7 +10,7 @@ dataSources:
     source:
       address: "0xdf41220C7e322bFEF933D85D01821ad277f90172"
       abi: Astar
-      startBlock: 1860738
+      startBlock: 227808
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

@@ -18,6 +18,7 @@ import {
   Transfer as TransferEvent,
   Unpaused as UnpausedEvent
 } from "../generated/Astar/Astar"
+import { Address, BigInt } from "@graphprotocol/graph-ts"
 import {
   Approval,
   CallOFTReceivedSuccess,
@@ -36,8 +37,15 @@ import {
   SetTrustedRemote,
   SetTrustedRemoteAddress,
   Transfer,
-  Unpaused
+  Unpaused,
+  UserHolding
 } from "../generated/schema"
+
+const SNAPSHOT_BLOCK_NUMBER = "1860738" // May 1st 2024
+enum Operation {
+  ADD,
+  SUBTRACT
+}
 
 export function handleApproval(event: ApprovalEvent): void {
   let entity = new Approval(
@@ -143,6 +151,9 @@ export function handleReceiveFromChain(event: ReceiveFromChainEvent): void {
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
 
+  if (event.block.number <= BigInt.fromString(SNAPSHOT_BLOCK_NUMBER)) {
+    updateUserBridgeInfo(event.params._to, event.params._amount, Operation.ADD);
+  }
   entity.save()
 }
 
@@ -177,6 +188,9 @@ export function handleSendToChain(event: SendToChainEvent): void {
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
 
+  if (event.block.number <= BigInt.fromString(SNAPSHOT_BLOCK_NUMBER)) {
+    updateUserBridgeInfo(event.params._from, event.params._amount, Operation.SUBTRACT);
+  }
   entity.save()
 }
 
@@ -291,6 +305,10 @@ export function handleTransfer(event: TransferEvent): void {
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
 
+  if (event.block.number <= BigInt.fromString(SNAPSHOT_BLOCK_NUMBER)) {
+    updateUserAstrHoldings(event.params.to, event.params.value, Operation.ADD);
+    updateUserAstrHoldings(event.params.from, event.params.value, Operation.SUBTRACT);
+  }
   entity.save()
 }
 
@@ -305,4 +323,44 @@ export function handleUnpaused(event: UnpausedEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+}
+
+function updateUserAstrHoldings(user: Address, holding: BigInt, operation: Operation): void {
+  if (user.toHexString() == "0x0000000000000000000000000000000000000000") return;
+
+  let userHolding = UserHolding.load(user);
+  if (userHolding == null) {
+    userHolding = new UserHolding(user);
+    userHolding.holding = BigInt.fromI32(0);
+    userHolding.bridgedIn = BigInt.fromI32(0);
+    userHolding.bridgedOut = BigInt.fromI32(0);
+  }
+
+  if (operation === Operation.ADD) {
+    userHolding.holding = userHolding.holding.plus(holding);
+  } else if (operation === Operation.SUBTRACT) {
+    userHolding.holding = userHolding.holding.minus(holding);
+  }
+
+  userHolding.save();
+}
+
+function updateUserBridgeInfo(user: Address, amount: BigInt, operation: Operation): void {
+  if (user.toHexString() == "0x0000000000000000000000000000000000000000") return;
+
+  let userHolding = UserHolding.load(user);
+  if (userHolding == null) {
+    userHolding = new UserHolding(user);
+    userHolding.holding = BigInt.fromI32(0);
+    userHolding.bridgedIn = BigInt.fromI32(0);
+    userHolding.bridgedOut = BigInt.fromI32(0);
+  }
+
+  if (operation === Operation.ADD) {
+    userHolding.bridgedIn = userHolding.bridgedIn.plus(amount);
+  } else if (operation === Operation.SUBTRACT) {
+    userHolding.bridgedOut = userHolding.bridgedOut.plus(amount);
+  }
+
+  userHolding.save();
 }
