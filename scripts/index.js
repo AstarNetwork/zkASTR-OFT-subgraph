@@ -7,13 +7,12 @@ const csvWriter = createCsvWriter({
     header: [
         {id: 'id', title: 'ID'},
         {id: 'holding', title: 'Holding'},
-        {id: 'bridgedIn', title: 'Bridged In'},
-        {id: 'bridgedOut', title: 'Bridged Out'},
     ]
 });
 const GRAPH_ENDPOINT = 'https://api.studio.thegraph.com/query/68400/zkastr-oft/v0.0.5';
 
 let fetched = 0;
+let nonzero = 0;
 let data = [];
 
 const fetchPage = async (skip) => {
@@ -26,9 +25,6 @@ const fetchPage = async (skip) => {
                 ) {
                     id
                     holding
-                    bridgedIn
-                    bridgedOut
-
                 }
             }
         `,
@@ -50,16 +46,13 @@ const fetchPage = async (skip) => {
     console.log(`Fetched ${response.data.data.userHoldings.length} user holdings`);
     fetched += response.data.data.userHoldings.length
     console.log(`Total fetched: ${fetched}`);
-    // response.data.data.userHoldings.forEach(userHolding => {
-    //     console.log(`ID: ${userHolding.id}`);
-    //     console.log(`Holding: ${userHolding.holding}`);
-    //     console.log(`Bridged In: ${userHolding.bridgedIn}`);
-    //     console.log(`Bridged Out: ${userHolding.bridgedOut}`);
-    //     console.log('---');
-    // });
 
+    const nonZeroHoldings = response.data.data.userHoldings.filter(userHolding => userHolding.holding !== '0');
+    console.log(`Fetched ${nonZeroHoldings.length} nonzero holdings`);
+    nonzero += nonZeroHoldings.length
+    console.log(`Total nonzero fetched: ${nonzero}`);
 
-    data = data.concat(response.data.data.userHoldings.map(userHolding => ({
+    data = data.concat(nonZeroHoldings.map(userHolding => ({
         id: userHolding.id,
         holding: userHolding.holding,
         bridgedIn: userHolding.bridgedIn,
@@ -72,7 +65,7 @@ const fetchPage = async (skip) => {
 
 }
 
-const fetchASTRStatusAtBlock = async () => {
+const fetchASTRStatus = async () => {
     let skip = 0;
     while (true) {
         const fetchedDataLength = await fetchPage(skip);
@@ -86,4 +79,4 @@ const fetchASTRStatusAtBlock = async () => {
         .then(() => console.log('The CSV file was written successfully'));
 }
 
-fetchASTRStatusAtBlock(); 
+fetchASTRStatus(); 
